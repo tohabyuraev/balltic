@@ -7,18 +7,18 @@ PATH = os.getcwd()
 
 def _load_gpowders() -> dict:
     try:
-        with open(PATH + '\powders\gpowders.json') as f:
+        with open(PATH + r'\powders\gpowders.json') as f:
             gpowders = json.load(f)
-    except:
+    except Exception:
         raise Exception
     return gpowders
 
 
 def _save_gpowders(gpowders: dict) -> json:
     try:
-        with open(PATH + '\powders\gpowder.json', 'w') as f:
+        with open(PATH + r'\powders\gpowder.json', 'w') as f:
             json.dump(gpowders, f)
-    except:
+    except Exception:
         raise Exception
 
 
@@ -124,7 +124,7 @@ def add(gpname: str, gpowder: dict):
     gpowders[gpname] = gpowder
     try:
         _save_gpowders(gpowders)
-    except:
+    except Exception:
         return False
     else:
         return True
@@ -148,7 +148,7 @@ def delete(gpname: str):
     gpowders = _load_gpowders()
     try:
         del gpowders[gpname]
-    except:
+    except Exception:
         return True
     else:
         return False

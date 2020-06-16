@@ -1,6 +1,8 @@
-﻿import numpy as np
+﻿import os
 
-from .config import DEFAULT
+import numpy as np
+
+from .config import DEFAULT, RES_PATH
 
 __author__ = 'Anthony Byuraev'
 
@@ -34,6 +36,7 @@ class EulerianGrid(object):
     def __init__(self, initial, nodes=None, press=None, L0=None, L=None):
         self.default = DEFAULT
         self.is_default = False
+        self.is_solved = False
 
         if nodes is not None:
             self.nodes = nodes
@@ -327,3 +330,50 @@ class EulerianGrid(object):
             self._get_q()
             if self.x_interface[-1] >= self.L:
                 break
+        self.is_solved = True
+
+    def save(self, file=r'\gd.npz'):
+        """
+        Save solution arrays into a single file in uncompressed ``.npz`` format
+
+        Parameters
+        ----------
+        file: str or file
+            Either the filename (string) or an open file (file-like object)
+            where the data will be saved. If file is a string or a Path, the
+            ``.npz`` extension will be appended to the filename if it is not
+            already there.
+
+        Returns
+        -------
+        None
+        """
+
+        file_path = os.getcwd() + file
+
+        if self.is_solved:
+            np.savez(file_path,
+                     shell_position=self.shell_position,
+                     shell_velocity=self.shell_velocity,
+                     shell_pressure=self.shell_pressure,
+                     stem_pressure=self.stem_pressure)
+        else:
+            raise NotSolvedException()
+
+    def load(self, file=r'\gd.npz'):
+        file_path = os.getcwd() + file
+
+        try:
+            results = np.load(file_path)
+        except Exception:
+            raise NotSolvedException
+
+        self.shell_position = results['shell_position']
+        self.shell_velocity = results['shell_velocity']
+        self.shell_pressure = results['shell_pressure']
+        self.stem_pressure = results['stem_pressure']
+
+
+class NotSolvedException(Exception):
+    def __init__(self):
+        super(NotSolvedException, self).__init__('Решение задачи еще не получено. Запустите метод run()')

@@ -59,7 +59,7 @@ setup(
     author_email="anthony.byuraev@gmail.com",
     url="https://github.com/tohabyuraev/balltic",
     packages=packages,
-    install_requires = requirements,
+    install_requires=requirements,
     classifiers=[_f for _f in CLASSIFIERS],
     python_requires='>=3.6'
 )
