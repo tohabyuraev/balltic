@@ -31,6 +31,20 @@ MICRO = 1
 VERSION = f'{MAJOR}.{MINOR}.{MICRO}'
 
 
+def requirements():
+    requirements_list = []
+
+    with open('requirements.txt') as requirements:
+        for install in requirements:
+            requirements_list.append(install.strip())
+
+    return requirements_list
+
+
+packages = find_packages()
+requirements = requirements()
+
+
 with open("README.md", "r") as f:
     long_description = f.read()
 
@@ -44,7 +58,8 @@ setup(
     author="Anthony Byuraev",
     author_email="anthony.byuraev@gmail.com",
     url="https://github.com/tohabyuraev/balltic",
-    packages=find_packages(),
+    packages=packages,
+    install_requires = requirements,
     classifiers=[_f for _f in CLASSIFIERS],
     python_requires='>=3.6'
 )
