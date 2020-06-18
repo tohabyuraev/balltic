@@ -1,8 +1,8 @@
-﻿import os
+import os
 
 import numpy as np
 
-from .config import DEFAULT, RES_PATH
+from ..config import DEFAULT
 
 __author__ = 'Anthony Byuraev'
 
@@ -11,29 +11,13 @@ __all__ = ['EulerianGrid']
 
 class EulerianGrid(object):
     """
-    Класс, содержащий решение основной задачи внутренней баллистики
-        в газодинамической постановке на подвижной сетке по методу Эйлера
-
-    Parameters
-    ----------
-    initial: dict
-        Словарь начальных условий и характеристик АО
-    press: float, optional
-        Начальное давление в каморе
-    L0: float, optional
-        Начальная длина запоршневого пространства
-    L: float, optional
-        Длина ведущей части стола
-
-    Returns
-    -------
-    solution:
+    Класс - каркас для построения решений Pneumatic и Gunpowder
     """
 
     def __str__(self):
-        return 'Class EulerianGrid'
+        return 'Обьект класса EulerianGrid'
 
-    def __init__(self, initial, nodes=None, press=None, L0=None, L=None):
+    def __init__(self, initial, nodes=100, press=None, L0=None, L=None):
         self.default = DEFAULT
         self.is_default = False
         self.is_solved = False
@@ -103,6 +87,7 @@ class EulerianGrid(object):
                                  self.ro_cell * self.v_cell,
                                  self.ro_cell * (self.energy_cell
                                                  + self.v_cell ** 2 / 2)])
+        return self.run()
 
     def _get_q(self):
         coef_stretch = self.x_prev / self.x_interface[1]
@@ -332,7 +317,7 @@ class EulerianGrid(object):
                 break
         self.is_solved = True
 
-    def save(self, file=r'\gd.npz'):
+    def save(self, path=r'\balltic\gd\results.npz'):
         """
         Save solution arrays into a single file in uncompressed ``.npz`` format
 
@@ -349,7 +334,7 @@ class EulerianGrid(object):
         None
         """
 
-        file_path = os.getcwd() + file
+        file_path = os.getcwd() + path
 
         if self.is_solved:
             np.savez(file_path,
@@ -357,23 +342,27 @@ class EulerianGrid(object):
                      shell_velocity=self.shell_velocity,
                      shell_pressure=self.shell_pressure,
                      stem_pressure=self.stem_pressure)
+            return True
         else:
-            raise NotSolvedException()
+            raise NotSolvedError
 
-    def load(self, file=r'\gd.npz'):
-        file_path = os.getcwd() + file
+    def load(self, path=r'\balltic\gd\results.npz'):
+        file_path = os.getcwd() + path
 
         try:
             results = np.load(file_path)
-        except Exception:
-            raise NotSolvedException
+        except FileNotFoundError:
+            print('FileNotFoundError: Файл не найден или не существует')
+            return False
 
         self.shell_position = results['shell_position']
         self.shell_velocity = results['shell_velocity']
         self.shell_pressure = results['shell_pressure']
         self.stem_pressure = results['stem_pressure']
 
+        return True
 
-class NotSolvedException(Exception):
+
+class NotSolvedError(Exception):
     def __init__(self):
-        super(NotSolvedException, self).__init__('Решение задачи еще не получено. Запустите метод run()')
+        super(NotSolvedError, self).__init__('Решение задачи отсутствует')
