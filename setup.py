@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Balltic - pretty simple package for solving problems of internal ballistics with Python.
+Balltic - pretty simple package for solving problems
+    of internal ballistics with Python.
 
 It provides:
 
@@ -26,8 +27,8 @@ CLASSIFIERS = (
 )
 
 MAJOR = 0
-MINOR = 0
-MICRO = 1
+MINOR = 1
+MICRO = 0
 VERSION = f'{MAJOR}.{MINOR}.{MICRO}'
 
 
@@ -50,7 +51,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="Balltic",
-    version='0.0.1',
+    version=VERSION,
     description="Ballistics",
     long_description=long_description,
     long_description_content_type="text/markdown",
