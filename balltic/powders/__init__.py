@@ -5,13 +5,22 @@ import json
 PATH = os.getcwd()
 
 
-def _load_gpowders() -> dict:
+def _load_many() -> dict:
     try:
         with open(PATH + r'\powders\gpowders.json') as f:
             gpowders = json.load(f)
     except Exception:
         raise Exception
     return gpowders
+
+
+def load(gunpowder: str = None) -> dict:
+    try:
+        with open(PATH + '\\balltic\powders\gpowders.json') as f:
+            gpowders = json.load(f)
+        return gpowders[gunpowder]
+    except FileNotFoundError:
+        print('FileNotFoundError: Файл не найден или не существует')
 
 
 def _save_gpowders(gpowders: dict) -> json:
@@ -36,7 +45,7 @@ def show_all():
         List with gunpowders names
     """
 
-    gpowders = _load_gpowders()
+    gpowders = _load_many()
     print(gpowders.keys())
 
 
@@ -55,7 +64,7 @@ def show_one(gpname: str):
         Gunpowder characteristics
     """
 
-    gpowders = _load_gpowders()
+    gpowders = _load_many()
     print(gpowders[gpname])
 
 
@@ -74,7 +83,7 @@ def check(gpname: str):
         `True` if gunpowder in gpowders.json, `False` otherwise
     """
 
-    gpowders = _load_gpowders()
+    gpowders = _load_many()
     return True if gpname in gpowders else False
 
 
@@ -93,7 +102,7 @@ def fetch(gpname: str):
         Gunpowder in dictionary form
     """
 
-    gpowders = _load_gpowders()
+    gpowders = _load_many()
     return gpowders[gpname]
 
 
@@ -120,7 +129,7 @@ def add(gpname: str, gpowder: dict):
         k_2, lambda_2, k_f, k_l
     """
 
-    gpowders = _load_gpowders()
+    gpowders = _load_many()
     gpowders[gpname] = gpowder
     try:
         _save_gpowders(gpowders)
@@ -145,10 +154,29 @@ def delete(gpname: str):
         `True` if all positive, `False` otherwise
     """
 
-    gpowders = _load_gpowders()
+    gpowders = _load_many()
     try:
         del gpowders[gpname]
     except Exception:
         return True
     else:
         return False
+
+
+class Powder(object):
+    def __init__(self, name):
+        self.name = name
+        self._load_from_db()
+
+    def _load_from_db(self):
+        self._powder = load(self.name)
+        self.k = self._powder['etta'] + 1
+        self.f = self._powder['f'] * 1e6
+        self.ro = self._powder['ro'] * 1e3
+        self.k_1 = self._powder['k_1']
+        self.k_2 = self._powder['k_2']
+        self.I_k = self._powder['I_k'] * 1e6
+        self.z_k = self._powder['Z_k']
+        self.alpha_k = self._powder['alpha_k'] * 1e-3
+        self.lambda_1 = self._powder['lambda_1']
+        self.lambda_2 = self._powder['lambda_2']
