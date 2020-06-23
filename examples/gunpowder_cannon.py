@@ -6,7 +6,7 @@ my_cannon = {
     'press_vsp': 5 * 1e6,
     'denload': 775,
     'K': 1.03,
-    'd': 0.057,
+    'caliber': 0.057,
     'shell': 3.75,
     'kurant': 0.4,
     'barrel': 3.861,

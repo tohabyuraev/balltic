@@ -61,7 +61,8 @@ class Pneumatic(EulerianGrid):
 
         self.ro = cannon.get('ro', self.default['ro'])
         self.shell = cannon.get('shell', self.default['shell'])
-        self.square = np.pi * cannon.get('d', self.default['d']) ** 2 / 4
+        self.square = np.pi * cannon.get(
+            'caliber', self.default['caliber']) ** 2 / 4
 
         # параметры газа
         self.R = cannon.get('R', self.default['R'])

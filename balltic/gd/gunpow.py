@@ -74,7 +74,7 @@ class Gunpowder(EulerianGrid):
                 'denload', self.default_cannon['denload'])
 
         self.omega = self.omega_q * self.shell
-        self.square = np.pi * cannon['d'] ** 2 / 4
+        self.square = np.pi * cannon['caliber'] ** 2 / 4
         self.powder = Powder(powder)
         self.chamber = self.omega / self.ro / self.square
 
