@@ -1,9 +1,9 @@
+__author__ = 'Anthony Byuraev'
+
 import numpy as np
 
 from balltic.core.euler import EulerianGrid
-from ..config import PNEUMATIC_CANNON
-
-__author__ = 'Anthony Byuraev'
+from balltic.config import PNEUMATIC_CANNON
 
 
 class Pneumatic(EulerianGrid):

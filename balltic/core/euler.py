@@ -1,37 +1,27 @@
-import os
-
-import numpy as np
-
 __author__ = 'Anthony Byuraev'
 
 __all__ = ['EulerianGrid']
 
+import os
 
-class EulerianGrid(object):
+import numpy as np
+
+from .meta import BasicGrid
+
+
+class EulerianGrid(BasicGrid):
     """
-    Класс - каркас для построения решений Pneumatic и Gunpowder
+    Класс реализует общие методы, для расчетов в газодинамической постановке
     """
 
-    def __str__(self):
-        return 'Обьект класса EulerianGrid'
+    def __repr__(self):
+        return (f'{self.__class__.__name__}()')
 
     def __init__(self):
         self.tau = 0
         # длина ячейки на пред. шаге (коор-та 1 границы)
         #   необходимо для расчета веторов q
         self.x_previous = 0
-
-    def _get_q(self):
-        raise NotImplementedError
-
-    def _get_f(self):
-        raise NotImplementedError
-
-    def _get_F_mines(self):
-        raise NotImplementedError
-
-    def _get_F_plus(self):
-        raise NotImplementedError
 
     def _get_c_interface(self):
         self.c_interface = (self.c_cell[1:] + self.c_cell[:-1]) / 2
@@ -52,22 +42,8 @@ class EulerianGrid(object):
             (abs(self.v_cell[1:-1]) + self.c_cell[1:-1])
         self.tau = self.kurant * min(buf)
 
-    def _border(self):
-        raise NotImplementedError
-
-    def _new_x_interf(self, last_x):
-        """
-        Метод определяет новые координаты границ
-
-        Parameters
-        ----------
-        last_x: float
-            Координата последней границы
-        """
-        self.x_interface = np.linspace(0, last_x, self.nodes - 1)
-
-    def _end_vel_x(self):
-        raise NotImplementedError
+    def _new_x_interfaces(self, last_x_interface):
+        self.x_interface = np.linspace(0, last_x_interface, self.nodes - 1)
 
     def _fetta_plus(self):
         """
@@ -138,7 +114,7 @@ class EulerianGrid(object):
         """
 
         # Вычисление координат границ в начальный момент времени
-        self._new_x_interf(self.chamber)
+        self._new_x_interfaces(self.chamber)
 
         # Формирование массивов результатов
         self.shell_position = []
@@ -151,7 +127,7 @@ class EulerianGrid(object):
         while True:
             self._get_tau()
             self.x_previous = self.x_interface[1]
-            self._new_x_interf(self._end_vel_x()[1])
+            self._new_x_interfaces(self._end_vel_x()[1])
             self.v_interface[-1] = self._end_vel_x()[0]
             # линейное распределение скорости
             self.v_interface = (self.v_interface[-1] / self.x_interface[-1]) \
@@ -193,7 +169,7 @@ class EulerianGrid(object):
 
         Returns
         -------
-        None
+        'True' if succes, else raises NotSolvedError
         """
 
         file_path = os.getcwd() + path

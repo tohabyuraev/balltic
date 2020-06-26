@@ -8,7 +8,7 @@ PNEUMATIC_CANNON = {
     'shell': 0.1,
     'k': 1.4,
     'Ku': 0.5,
-    'R': 287
+    'R': 287,
 }
 
 GUNPOWDER_CANNON = {
@@ -22,5 +22,5 @@ GUNPOWDER_CANNON = {
     'shell': 3.75,
     'barrel': 3.027,
     'kurant': 0.4,
-    'omega_q': 0.257
+    'omega_q': 0.257,
 }

@@ -1,10 +1,10 @@
+__author__ = 'Anthony Byuraev'
+
 import numpy as np
 
 from balltic.powders import Powder
 from balltic.core.euler import EulerianGrid
-from ..config import GUNPOWDER_CANNON
-
-__author__ = 'Anthony Byuraev'
+from balltic.config import GUNPOWDER_CANNON
 
 
 class Gunpowder(EulerianGrid):
