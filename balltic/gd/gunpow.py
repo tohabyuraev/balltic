@@ -37,6 +37,9 @@ class Gunpowder(EulerianGrid):
     """
     def __str__(self):
         return 'Обьект класса Gunpowder'
+    
+    def __repr__(self):
+        return (f'{self.__class__.__name__}(cannon, powder)')
 
     def __init__(self, cannon, powder, nodes=None, omega_q=None,
                  denload=None, barrel=None, kurant=None, boostp=None):

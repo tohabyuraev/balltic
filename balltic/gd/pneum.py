@@ -33,6 +33,9 @@ class Pneumatic(EulerianGrid):
     def __str__(self):
         return 'Обьект класса Pneumatic'
 
+    def __repr__(self):
+        return (f'{self.__class__.__name__}(cannon)')
+
     def __init__(self, cannon, nodes=None, initialp=None,
                  chamber=None, barrel=None, kurant=None):
         self.default = PNEUMATIC_CANNON
