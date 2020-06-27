@@ -2,18 +2,19 @@
 mxp.py -- модуль отвечает за обоснование уровня максимального давления
 """
 
+__author__ = 'Anthony Byuraev'
+
+__all__ = ['MaxPressure']
+
 import os
-from math import sqrt
 
 import numpy as np
-
-__author__ = 'Anthony Byuraev'
 
 
 PATH_BASE = os.getcwd()
 
 
-class MPress(object):
+class MaxPressure(object):
     """
     Рассчитывает уровень максимального давления на основе аналогов АО
 
@@ -26,29 +27,32 @@ class MPress(object):
 
     Returns
     -------
-    solution:
+    : MaxPressure
+        Решение в виде экземпляра класса
     """
     def __init__(self, cannon, velocity):
         self.CQ15 = 15
         self.G = 9.80665
 
         try:
-            self.shell = cannon.get('shell')
+            self.shell = cannon['shell']
         except Exception:
             raise FieldNotFoundError('shell')
         try:
-            self.caliber = cannon.get('caliber')
+            self.caliber = cannon['caliber']
         except Exception:
             raise FieldNotFoundError('caliber')
         try:
-            self.K = cannon.get('K')
+            self.K = cannon['K']
         except Exception:
             raise FieldNotFoundError('K')
         try:
-            self.fi_1 = cannon.get('fi_1')
+            self.fi_1 = cannon['fi_1']
         except Exception:
             raise FieldNotFoundError('fi_1')
         self.velocity = velocity
+
+        self._solve()
 
     def _load_chuev(self, path_to_file: str = r'\balltic\td\chuev.npz'):
         FILE = PATH_BASE + path_to_file
@@ -58,7 +62,7 @@ class MPress(object):
         self.table_kresherp = table['kresherp']
         self.table_etaomega = table['etaomega']
 
-    def solve(self):
+    def _solve(self):
         self._load_chuev()
 
         self.ce = self.shell * 1e-3 * self.velocity ** 2 \
@@ -69,7 +73,7 @@ class MPress(object):
         )
         self.ce15 = 0.5 * self.CQ15 / self.cq * \
             (- (3 * self.etaomega_ce * self.cq - self.ce)
-             + sqrt((3 * self.etaomega_ce * self.cq - self.ce) ** 2
+             + np.sqrt((3 * self.etaomega_ce * self.cq - self.ce) ** 2
              + 12 * self.etaomega_ce * self.ce * (self.cq ** 2) / self.CQ15))
         self.etaomega_ce15 = np.interp(
             self.ce15, self.table_ce, self.table_etaomega
@@ -90,5 +94,4 @@ class MPress(object):
 class FieldNotFoundError(Exception):
     def __init__(self, field):
         super(FieldNotFoundError, self).__init__(
-            'FieldNotFoundError: Параметр {} не найден или отсутствует'.format(field)
-        )
+            f'Параметр {field} не найден или отсутствует')
