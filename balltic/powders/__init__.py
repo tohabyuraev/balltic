@@ -161,22 +161,3 @@ def delete(gpname: str):
         return True
     else:
         return False
-
-
-class Powder(object):
-    def __init__(self, name):
-        self.name = name
-        self._load_from_db()
-
-    def _load_from_db(self):
-        self._powder = load(self.name)
-        self.k = self._powder['etta'] + 1
-        self.f = self._powder['f'] * 1e6
-        self.ro = self._powder['ro'] * 1e3
-        self.k_1 = self._powder['k_1']
-        self.k_2 = self._powder['k_2']
-        self.I_k = self._powder['I_k'] * 1e6
-        self.z_k = self._powder['Z_k']
-        self.alpha_k = self._powder['alpha_k'] * 1e-3
-        self.lambda_1 = self._powder['lambda_1']
-        self.lambda_2 = self._powder['lambda_2']

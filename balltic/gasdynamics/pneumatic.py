@@ -3,7 +3,7 @@ __author__ = 'Anthony Byuraev'
 import numpy as np
 
 from balltic.core.euler import EulerianGrid
-from balltic.config import PNEUMATIC_CANNON
+from balltic.config import P_CANNON
 
 
 class Pneumatic(EulerianGrid):
@@ -38,7 +38,7 @@ class Pneumatic(EulerianGrid):
 
     def __init__(self, cannon, nodes=None, initialp=None,
                  chamber=None, barrel=None, kurant=None):
-        self.default = PNEUMATIC_CANNON
+        self.default = P_CANNON
         self.is_solved = False
 
         if nodes is not None:

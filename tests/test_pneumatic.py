@@ -3,7 +3,7 @@ import math
 import pytest
 
 from balltic import Pneumatic
-from balltic.config import PNEUMATIC_CANNON
+from balltic.config import P_CANNON
 from .dataset import PNEUMATIC_CANNON as cannon
 
 def test_init():

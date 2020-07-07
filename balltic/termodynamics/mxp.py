@@ -92,6 +92,4 @@ class MaxPressure(object):
 
 
 class FieldNotFoundError(Exception):
-    def __init__(self, field):
-        super(FieldNotFoundError, self).__init__(
-            f'Параметр {field} не найден или отсутствует')
+    pass

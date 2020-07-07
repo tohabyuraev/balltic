@@ -1,4 +1,4 @@
-PNEUMATIC_CANNON = {
+P_CANNON = {
     'nodes': 100,
     'initialp': 5e6,
     'ro': 141.471,
@@ -11,7 +11,7 @@ PNEUMATIC_CANNON = {
     'R': 287,
 }
 
-GUNPOWDER_CANNON = {
+G_CANNON = {
     'nodes': 100,
     'boostp': 30 * 1e6,
     'press_vsp': 5 * 1e6,
@@ -23,4 +23,15 @@ GUNPOWDER_CANNON = {
     'barrel': 3.027,
     'kurant': 0.4,
     'omega_q': 0.257,
+}
+
+DEFAULT_GP = None
+
+AVERAGE_GP = {
+    'f': 1e6,
+    'k': 1.25,
+    'ro': 1.6e3,
+    'alpha_k': 1e-3,
+    'kappa_1': 1,
+    'lambda_1': 0,
 }

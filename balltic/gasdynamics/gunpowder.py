@@ -2,9 +2,9 @@ __author__ = 'Anthony Byuraev'
 
 import numpy as np
 
-from balltic.powders import Powder
+from balltic.core.gpowder import GunPowder
 from balltic.core.euler import EulerianGrid
-from balltic.config import GUNPOWDER_CANNON
+from balltic.config import G_CANNON
 
 
 class Gunpowder(EulerianGrid):
@@ -43,7 +43,7 @@ class Gunpowder(EulerianGrid):
 
     def __init__(self, cannon, powder, nodes=None, omega_q=None,
                  denload=None, barrel=None, kurant=None, boostp=None):
-        self.default_cannon = GUNPOWDER_CANNON
+        self.default_cannon = G_CANNON
         self.default_powder = None
         self.is_solved = False
 
@@ -78,7 +78,7 @@ class Gunpowder(EulerianGrid):
 
         self.omega = self.omega_q * self.shell
         self.square = np.pi * cannon['caliber'] ** 2 / 4
-        self.powder = Powder(powder)
+        self.powder = GunPowder(powder)
         self.chamber = self.omega / self.ro / self.square
 
         self.ro_cell = np.full(self.nodes, self.ro)
