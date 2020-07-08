@@ -1,20 +1,23 @@
-from balltic import Pneumatic
+from balltic import Pneumatic, AirGun, Gas
 
-my_cannon = {
-    'nodes': 100,
-    'press': 5e6,
-    'ro': 141.471,
-    'chamber': 0.5,
-    'caliber': 0.03,
-    'barrel': 2,
-    'shell_mass': 0.1,
-    'k': 1.4,
-    'Ku': 0.5,
-    'R': 287
-}
+my_big_gun = AirGun(
+    shell = 0.1,
+    kurant = 0.5,
+    barrel = 2,
+    chamber = 0.5,
+    caliber = 0.03,
+    initialp = 5 * 1e6,
+)
 
-# Получить решение для условий и характеристик, приведенных в `cannon`
-solution = Pneumatic(cannon=my_cannon)
+boom_gas = Gas(
+    k = 1.4,
+    R = 287,
+    ro = 141.471,
+)
+
+# Получить решение для условий и параметров,
+#   приведенных в `my_big_gun` и `boom_gas`
+solution = Pneumatic(gun=my_big_gun, gas=boom_gas)
 
 # Скорость снаряда в момент вылета из канала ствола
 solution.shell_velocity[-1]

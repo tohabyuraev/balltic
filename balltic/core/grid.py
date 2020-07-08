@@ -1,27 +1,100 @@
 __author__ = 'Anthony Byuraev'
 
-__all__ = ['EulerianGrid']
+__all__ = ['EulerianGrid', 'BaseGrid']
 
 import os
+import typing
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from .meta import BasicGrid
+from balltic.core.guns import ArtilleryGun, AirGun
+from balltic.core.gpowder import GunPowder
 
 
-class EulerianGrid(BasicGrid):
+class BaseGrid(metaclass=ABCMeta):
+    gun:        typing.Union[ArtilleryGun, AirGun]
+    gpowder:    GunPowder
+    nodes:      int
+
+    @abstractmethod
+    def _get_q(self):
+        pass
+
+    @abstractmethod
+    def _get_f(self):
+        pass
+
+    @abstractmethod
+    def _get_F_mines(self):
+        pass
+
+    @abstractmethod
+    def _get_F_plus(self):
+        pass
+
+    @abstractmethod
+    def _border(self):
+        pass
+
+    @abstractmethod
+    def _end_vel_x(self):
+        pass
+
+    @abstractmethod
+    def _get_c_interface(self):
+        pass
+
+    @abstractmethod
+    def _get_mah_mp(self):
+        pass
+
+    @abstractmethod
+    def _get_mah_press_interface(self):
+        pass
+
+    @abstractmethod
+    def _get_tau(self):
+        pass
+
+    @abstractmethod
+    def _new_x_interfaces(self):
+        pass
+
+    @abstractmethod
+    def _fetta_plus(self):
+        pass
+
+    @abstractmethod
+    def _fetta_mines(self):
+        pass
+
+    @abstractmethod
+    def _getta_plus(self):
+        pass
+
+    @abstractmethod
+    def _getta_mines(self):
+        pass
+
+    @abstractmethod
+    def _run(self):
+        pass
+
+
+class EulerianGrid(BaseGrid):
     """
     Класс реализует общие методы, для расчетов в газодинамической постановке
     """
 
     def __repr__(self):
-        return (f'{self.__class__.__name__}()')
+        return f'{self.__class__.__name__}()'
 
     def __init__(self):
         self.tau = 0
         # длина ячейки на пред. шаге (коор-та 1 границы)
         #   необходимо для расчета веторов q
-        self.x_previous = 0
+        self._x_previous = 0
 
     def _get_c_interface(self):
         self.c_interface = (self.c_cell[1:] + self.c_cell[:-1]) / 2
@@ -40,7 +113,7 @@ class EulerianGrid(BasicGrid):
     def _get_tau(self):
         buf = (self.x_interface[1:] - self.x_interface[:-1]) / \
             (abs(self.v_cell[1:-1]) + self.c_cell[1:-1])
-        self.tau = self.kurant * min(buf)
+        self.tau = self.gun.kurant * min(buf)
 
     def _new_x_interfaces(self, last_x_interface):
         self.x_interface = np.linspace(0, last_x_interface, self.nodes - 1)
@@ -114,7 +187,7 @@ class EulerianGrid(BasicGrid):
         """
 
         # Вычисление координат границ в начальный момент времени
-        self._new_x_interfaces(self.chamber)
+        self._new_x_interfaces(self.gun.chamber)
 
         # Формирование массивов результатов
         self.shell_position = []
@@ -126,7 +199,7 @@ class EulerianGrid(BasicGrid):
         # Последовательное вычисления с шагом по времени
         while True:
             self._get_tau()
-            self.x_previous = self.x_interface[1]
+            self._x_previous = self.x_interface[1]
             self._new_x_interfaces(self._end_vel_x()[1])
             self.v_interface[-1] = self._end_vel_x()[0]
             # линейное распределение скорости
@@ -151,11 +224,11 @@ class EulerianGrid(BasicGrid):
             self._get_F_plus()
             self._get_f()
             self._get_q()
-            if self.x_interface[-1] >= self.barrel:
+            if self.x_interface[-1] >= self.gun.barrel:
                 break
         self.is_solved = True
 
-    def save(self, path=r'\balltic\gd\results.npz'):
+    def save(self, path='\\balltic\\results\\results.npz'):
         """
         Save solution arrays into a single file in uncompressed ``.npz`` format
 
@@ -184,7 +257,7 @@ class EulerianGrid(BasicGrid):
         else:
             raise NotSolvedError
 
-    def load(self, path=r'\balltic\gd\results.npz'):
+    def load(self, path=r'\\balltic\\results\\results.npz'):
         file_path = os.getcwd() + path
 
         try:

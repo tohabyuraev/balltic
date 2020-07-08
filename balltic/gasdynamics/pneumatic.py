@@ -1,9 +1,14 @@
 __author__ = 'Anthony Byuraev'
 
+__all__ = ['Pneumatic']
+
+import typing
+
 import numpy as np
 
-from balltic.core.euler import EulerianGrid
-from balltic.config import P_CANNON
+from balltic.core.grid import EulerianGrid
+from balltic.core.guns import AirGun
+from balltic.core.gas import Gas
 
 
 class Pneumatic(EulerianGrid):
@@ -13,9 +18,11 @@ class Pneumatic(EulerianGrid):
 
     Parameters
     ----------
-    cannon: dict
-        Словарь начальных условий и характеристик АО
-    nodes: int, optional
+    gun: AirGun
+        Именованный кортеж начальных условий и параметров АО
+    gas: Gas
+        Именованный кортеж параметров легкого газа
+    nodes: int
         Количество узлов (интерфейсов) сетки
     initialp: float, optional
         Начальное давление в каморе
@@ -34,52 +41,44 @@ class Pneumatic(EulerianGrid):
         return 'Обьект класса Pneumatic'
 
     def __repr__(self):
-        return (f'{self.__class__.__name__}(cannon)')
+        return f'{self.__class__.__name__}(gun, gas)'
 
-    def __init__(self, cannon, nodes=None, initialp=None,
-                 chamber=None, barrel=None, kurant=None):
-        self.default = P_CANNON
-        self.is_solved = False
+    def __init__(self, gun: AirGun, gas: Gas, nodes=100,
+                 initialp: typing.Union[int, float] = None,
+                 chamber: typing.Union[int, float] = None,
+                 barrel: typing.Union[int, float] = None,
+                 kurant: typing.Union[int, float] = None) -> None:
 
-        if nodes is not None:
-            self.nodes = nodes
+        if isinstance(gun, AirGun):
+            self.gun = gun
         else:
-            self.nodes = cannon.get('nodes', self.default['nodes'])
+            raise ValueError('Параметр gun должен быть AirGun')
+        if isinstance(gas, Gas):
+            self.gas = gas
+        else:
+            raise ValueError('Параметр gas должен быть Gas')
+
+        self.nodes = nodes
         if initialp is not None:
-            self.press = initialp
-        else:
-            self.press = cannon.get('initialp', self.default['initialp'])
+            self.gun = self.gun._replace(initialp=initialp)
         if kurant is not None:
-            self.kurant = kurant
-        else:
-            self.kurant = cannon.get('Ku', self.default['Ku'])
+            self.gun = self.gun._replace(kurant=kurant)
         if chamber is not None:
-            self.chamber = chamber
-        else:
-            self.chamber = cannon.get('chamber', self.default['chamber'])
+            self.gun = self.gun._replace(chamber=chamber)
         if barrel is not None:
-            self.barrel = barrel
-        else:
-            self.barrel = cannon.get('barrel', self.default['barrel'])
+            self.gun = self.gun._replace(barrel=barrel)
 
-        self.ro = cannon.get('ro', self.default['ro'])
-        self.shell = cannon.get('shell', self.default['shell'])
-        self.square = np.pi * cannon.get(
-            'caliber', self.default['caliber']) ** 2 / 4
-
-        # параметры газа
-        self.R = cannon.get('R', self.default['R'])
-        self.k = cannon.get('k', self.default['k'])
+        self.gun = self.gun._replace(cs_area=np.pi * self.gun.caliber ** 2 / 4)
 
         self.energy_cell = np.full(
             self.nodes,
-            self.press / (self.k - 1) / self.ro
+            self.gun.initialp / (self.gas.k - 1) / self.gas.ro
         )
         self.c_cell = np.full(
             self.nodes,
-            np.sqrt(self.k * self.press / self.ro)
+            np.sqrt(self.gas.k * self.gun.initialp / self.gas.ro)
         )
-        self.ro_cell = np.full(self.nodes, self.ro)
+        self.ro_cell = np.full(self.nodes, self.gas.ro)
         self.v_cell = np.zeros(self.nodes)
         self.press_cell = np.zeros(self.nodes)
 
@@ -123,32 +122,33 @@ class Pneumatic(EulerianGrid):
                 self.ro_cell * (self.energy_cell + self.v_cell ** 2 / 2)
             ]
         )
+        self.is_solved = False
         return self._run()
 
     def _get_q(self):
-        coef_stretch = self.x_previous / self.x_interface[1]
+        coef_stretch = self._x_previous / self.x_interface[1]
 
         self.q_param[0][1:-1] = coef_stretch \
             * (self.q_param[0][1:-1]
-               - self.tau / self.x_previous
+               - self.tau / self._x_previous
                * (self.f_param[0][1:] - self.f_param[0][:-1]))
 
         self.q_param[1][1:-1] = coef_stretch \
             * (self.q_param[1][1:-1]
-               - self.tau / self.x_previous
+               - self.tau / self._x_previous
                * (self.f_param[1][1:] - self.f_param[1][:-1]))
 
         self.q_param[2][1:-1] = coef_stretch \
             * (self.q_param[2][1:-1]
-               - self.tau / self.x_previous
+               - self.tau / self._x_previous
                * (self.f_param[2][1:] - self.f_param[2][:-1]))
 
         self.ro_cell = self.q_param[0]
         self.v_cell = self.q_param[1] / self.q_param[0]
         self.energy_cell = self.q_param[2] \
             / self.q_param[0] - self.v_cell ** 2 / 2
-        self.press_cell = self.ro_cell * self.energy_cell * (self.k - 1)
-        self.c_cell = np.sqrt(self.k * self.press_cell / self.ro_cell)
+        self.press_cell = self.ro_cell * self.energy_cell * (self.gas.k - 1)
+        self.c_cell = np.sqrt(self.gas.k * self.press_cell / self.ro_cell)
         self._border()
 
     def _get_f(self):
@@ -208,7 +208,7 @@ class Pneumatic(EulerianGrid):
         """
         Возвращает скорость и координату последней границы
         """
-        acceleration = self.press_cell[-2] * self.square / self.shell
+        acceleration = self.press_cell[-2] * self.gun.cs_area / self.gun.shell
         velocity = self.v_interface[-1] + acceleration * self.tau
         x = self.x_interface[-1] + self.v_interface[-1] * self.tau \
                                  + acceleration * self.tau ** 2 / 2
