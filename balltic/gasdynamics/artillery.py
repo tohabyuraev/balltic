@@ -1,17 +1,17 @@
 __author__ = 'Anthony Byuraev'
 
-__all__ = ['Gunpowder']
+__all__ = ['ArtilleryGrid']
 
 import typing
 
 import numpy as np
 
-from balltic.core.gpowder import GunPowder
 from balltic.core.grid import EulerianGrid
 from balltic.core.guns import ArtilleryGun
+from balltic.core.gunpowder import GunPowder
 
 
-class Gunpowder(EulerianGrid):
+class ArtilleryGrid(EulerianGrid):
     """
     Класс - решение основной задачи внутренней баллистики
         в газодинамической постановке на подвижной сетке по методу Эйлера
@@ -20,7 +20,7 @@ class Gunpowder(EulerianGrid):
     ----------
     gun: NamedTuple
         Именнованный кортеж начальных условий и параметров АО
-    gpowder_name: str
+    gunpowder: str
         Название пороха
     nodes: int
         Количество узлов (интерфейсов) сетки
@@ -40,12 +40,12 @@ class Gunpowder(EulerianGrid):
     solution:
     """
     def __str__(self):
-        return 'Обьект класса Gunpowder'
+        return 'Обьект класса ArtilleryGrid'
 
     def __repr__(self):
-        return (f'{self.__class__.__name__}(gun, gpowder)')
+        return (f'{self.__class__.__name__}(gun, gunpowder)')
 
-    def __init__(self, gun: ArtilleryGun, gpowder_name: str, nodes: int = 100,
+    def __init__(self, gun: ArtilleryGun, gunpowder: str, nodes: int = 100,
                  omega_q: typing.Union[int, float] = None,
                  denload: typing.Union[int, float] = None,
                  barrel: typing.Union[int, float] = None,
@@ -56,7 +56,7 @@ class Gunpowder(EulerianGrid):
             self.gun = gun
         else:
             raise ValueError('Параметр gun должен быть ArtilleryGun')
-        self.gpowder = GunPowder(gpowder_name)
+        self.gunpowder = GunPowder(gunpowder)
 
         self.nodes = nodes
         if boostp is not None:
@@ -81,16 +81,16 @@ class Gunpowder(EulerianGrid):
         self.psi_cell = self._psi()
         self.energy_cell = np.full(
             self.nodes,
-            self.press_cell / (self.gpowder.k - 1)
+            self.press_cell / (self.gunpowder.k - 1)
             * (1 / self.ro_cell - (
-                (1 - self.psi_cell) / self.gpowder.ro + self.gpowder.alpha_k * self.psi_cell))
-            + (1 - self.psi_cell) * self.gpowder.f / (self.gpowder.k - 1)
+                (1 - self.psi_cell) / self.gunpowder.ro + self.gunpowder.alpha_k * self.psi_cell))
+            + (1 - self.psi_cell) * self.gunpowder.f / (self.gunpowder.k - 1)
         )
         self.c_cell = np.full(
             self.nodes,
             1 / self.ro_cell
-            * np.sqrt(self.gpowder.k * self.press_cell
-                      / (1 / self.ro_cell - (1 - self.psi_cell) / self.gpowder.ro - self.gpowder.alpha_k * self.psi_cell)
+            * np.sqrt(self.gunpowder.k * self.press_cell
+                      / (1 / self.ro_cell - (1 - self.psi_cell) / self.gunpowder.ro - self.gunpowder.alpha_k * self.psi_cell)
                       )
         )
 
@@ -101,7 +101,7 @@ class Gunpowder(EulerianGrid):
         # для расчета потока q (Векторы H)
         self.h_param = np.full(
             self.nodes,
-            self.ro_cell * self.press_cell / self.gpowder.I_k
+            self.ro_cell * self.press_cell / self.gunpowder.I_k
         )
 
         # для расчета потока f (Векторы Ф )
@@ -176,16 +176,16 @@ class Gunpowder(EulerianGrid):
         buf = []
         for zet in self.zet_cell:
             if (zet <= 1):
-                buf.append(self.gpowder.k_1 * zet * (1 + self.gpowder.lambda_1 * zet))
-            elif (zet <= self.gpowder.z_k):
-                buf.append(self.gpowder.k_2 * (zet - 1) * (1 + self.gpowder.lambda_2 * (zet - 1)))
+                buf.append(self.gunpowder.k_1 * zet * (1 + self.gunpowder.lambda_1 * zet))
+            elif (zet <= self.gunpowder.z_k):
+                buf.append(self.gunpowder.k_2 * (zet - 1) * (1 + self.gunpowder.lambda_2 * (zet - 1)))
             else:
                 buf.append(1.0)
             # else: buf.append(self.k_2 * (self.z_k - 1) * (1 + self.lambda_2 * (self.z_k - 1)))
         return np.asarray(buf)
 
     def _get_q(self):
-        self.h_param = self.ro_cell * self.press_cell / self.gpowder.I_k
+        self.h_param = self.ro_cell * self.press_cell / self.gunpowder.I_k
         coef_stretch = self._x_previous / self.x_interface[1]
         self.q_param[0][1:-1] = coef_stretch * (
             self.q_param[0][1:-1]
@@ -217,11 +217,11 @@ class Gunpowder(EulerianGrid):
         self.zet_cell = self.q_param[3] / self.q_param[0]
         self.psi_cell = self._psi()
         self.press_cell = \
-            (self.energy_cell - (1 - self.psi_cell) * self.gpowder.f / (self.gpowder.k - 1)) \
-            * (self.gpowder.k - 1) \
-            / (1 / self.ro_cell - ((1 - self.psi_cell) / self.gpowder.ro + self.gpowder.alpha_k * self.psi_cell))
+            (self.energy_cell - (1 - self.psi_cell) * self.gunpowder.f / (self.gunpowder.k - 1)) \
+            * (self.gunpowder.k - 1) \
+            / (1 / self.ro_cell - ((1 - self.psi_cell) / self.gunpowder.ro + self.gunpowder.alpha_k * self.psi_cell))
         self.c_cell = 1 / self.ro_cell \
-            * np.sqrt(self.gpowder.k * self.press_cell / (1 / self.ro_cell - (1 - self.psi_cell) / self.gpowder.ro - self.gpowder.alpha_k * self.psi_cell))
+            * np.sqrt(self.gunpowder.k * self.press_cell / (1 / self.ro_cell - (1 - self.psi_cell) / self.gunpowder.ro - self.gunpowder.alpha_k * self.psi_cell))
         self._border()
 
     def _get_f(self):

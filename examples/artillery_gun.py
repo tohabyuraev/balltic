@@ -1,4 +1,4 @@
-from balltic import Gunpowder, ArtilleryGun
+from balltic import ArtilleryGrid, ArtilleryGun
 
 my_big_gun = ArtilleryGun(
     K = 1.03,
@@ -14,7 +14,7 @@ my_big_gun = ArtilleryGun(
 
 # Получить решение для условий и характеристик,
 #   приведенных в `my_big_gun`
-solution = Gunpowder(gun=my_big_gun, gpowder='16\\1 тр')
+solution = ArtilleryGrid(gun=my_big_gun, gunpowder='16\\1 тр')
 
 # Скорость снаряда в момент вылета из канала ствола
 solution.shell_velocity[-1]

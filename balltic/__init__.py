@@ -2,15 +2,15 @@ __author__ = 'Anthony Byuraev'
 
 __all__ = [
     'Gas',
-    'AirGun',
-    'Pneumatic',
-    'Gunpowder',
     'GunPowder',
+    'PneumaticGun',
     'ArtilleryGun',
+    'PneumaticGrid',
+    'ArtilleryGrid',
 ]
 
-from .gasdynamics.pneumatic import Pneumatic
-from .gasdynamics.gunpowder import Gunpowder
-from .core.gpowder import GunPowder
-from .core.guns import ArtilleryGun, AirGun
+from .gasdynamics.pneumatic import PneumaticGrid
+from .gasdynamics.artillery import ArtilleryGrid
+from .core.gunpowder import GunPowder
+from .core.guns import ArtilleryGun, PneumaticGun
 from .core.gas import Gas

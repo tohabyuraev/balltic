@@ -1,24 +1,24 @@
 __author__ = 'Anthony Byuraev'
 
-__all__ = ['Pneumatic']
+__all__ = ['PneumaticGrid']
 
 import typing
 
 import numpy as np
 
 from balltic.core.grid import EulerianGrid
-from balltic.core.guns import AirGun
+from balltic.core.guns import PneumaticGun
 from balltic.core.gas import Gas
 
 
-class Pneumatic(EulerianGrid):
+class PneumaticGrid(EulerianGrid):
     """
     Класс - решение основной задачи внутренней баллистики
         в газодинамической постановке на подвижной сетке по методу Эйлера
 
     Parameters
     ----------
-    gun: AirGun
+    gun: PneumaticGun
         Именованный кортеж начальных условий и параметров АО
     gas: Gas
         Именованный кортеж параметров легкого газа
@@ -38,21 +38,21 @@ class Pneumatic(EulerianGrid):
     solution:
     """
     def __str__(self):
-        return 'Обьект класса Pneumatic'
+        return 'Обьект класса PneumaticGrid'
 
     def __repr__(self):
         return f'{self.__class__.__name__}(gun, gas)'
 
-    def __init__(self, gun: AirGun, gas: Gas, nodes=100,
+    def __init__(self, gun: PneumaticGun, gas: Gas, nodes=100,
                  initialp: typing.Union[int, float] = None,
                  chamber: typing.Union[int, float] = None,
                  barrel: typing.Union[int, float] = None,
                  kurant: typing.Union[int, float] = None) -> None:
 
-        if isinstance(gun, AirGun):
+        if isinstance(gun, PneumaticGun):
             self.gun = gun
         else:
-            raise ValueError('Параметр gun должен быть AirGun')
+            raise ValueError('Параметр gun должен быть PneumaticGun')
         if isinstance(gas, Gas):
             self.gas = gas
         else:

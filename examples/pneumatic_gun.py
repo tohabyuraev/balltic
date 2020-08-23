@@ -1,6 +1,6 @@
-from balltic import Pneumatic, AirGun, Gas
+from balltic import PneumaticGrid, PneumaticGun, Gas
 
-my_big_gun = AirGun(
+my_big_gun = PneumaticGun(
     shell = 0.1,
     kurant = 0.5,
     barrel = 2,
@@ -17,7 +17,7 @@ boom_gas = Gas(
 
 # Получить решение для условий и параметров,
 #   приведенных в `my_big_gun` и `boom_gas`
-solution = Pneumatic(gun=my_big_gun, gas=boom_gas)
+solution = PneumaticGrid(gun=my_big_gun, gas=boom_gas)
 
 # Скорость снаряда в момент вылета из канала ствола
 solution.shell_velocity[-1]

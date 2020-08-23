@@ -7,11 +7,14 @@ __pycache__
 !.vscode/extensions.json
 *.code-workspace
 
-# Игнор файлы для дистрибутива
-venv
+# Игнор файлы для Python
+.venv
+.pytest_cache
+
+# Игнор файлы для PyPI
 dist
 build
 *.egg*
 
 # Игнор файлы разработки
-develop
+develop*

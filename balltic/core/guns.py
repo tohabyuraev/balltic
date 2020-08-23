@@ -1,6 +1,6 @@
 __author__ = 'Anthony Byuraev'
 
-__all__ = ['ArtilleryGun', 'AirGun']
+__all__ = ['ArtilleryGun', 'PneumaticGun']
 
 import typing
 
@@ -44,7 +44,7 @@ class ArtilleryGun(typing.NamedTuple):
     chamber:    typing.Union[int, float] = None
 
 
-class AirGun(typing.NamedTuple):
+class PneumaticGun(typing.NamedTuple):
     """
     Реализация артиллерийского орудия, стреляющего за счет энергии сжатого газа
 

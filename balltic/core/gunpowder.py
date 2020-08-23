@@ -5,11 +5,14 @@ __all__ = ['GunPowder']
 import os
 import json
 import typing
-from abc import ABCMeta, abstractclassmethod, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
+from abc import abstractclassmethod
+from abc import abstractstaticmethod
 
 
 BASE_PATH = os.getcwd()
-GPOWDER_KEYS = (
+GUNPOWDER_KEYS = (
     'f',
     'ro',
     'k_1',
@@ -42,16 +45,16 @@ class BasePowder(metaclass=ABCMeta):
     lambda_2:   typing.Union[int, float]
     _gpowder:   typing.Dict[str, dict]
 
-    @abstractclassmethod
-    def load_db(self, fp: typing.IO[str] = None) -> typing.Dict[str, dict]:
+    @abstractstaticmethod
+    def load_database(self, file_path: typing.IO[str] = None) -> typing.Dict[str, dict]:
         pass
 
     @abstractclassmethod
-    def load_gpowder(self, name: str) -> dict:
+    def load_gunpowder(self, name: str) -> dict:
         pass
 
     @abstractmethod
-    def _check_gpowder(self, gpowder: dict) -> dict:
+    def _check_gunpowder(self, gunpowder: dict) -> dict:
         pass
 
 
@@ -61,39 +64,47 @@ class GunPowder(BasePowder):
     """
     def __init__(self, name: str) -> None:
         self.name = name
-        self._gpowder = self.load_gpowder(self.name)
+        self._gunpowder = self.load_gunpowder(self.name)
 
-        self.k = self._gpowder['etta'] + 1
-        self.f = self._gpowder['f'] * 1e6
-        self.ro = self._gpowder['ro'] * 1e3
-        self.k_1 = self._gpowder['k_1']
-        self.k_2 = self._gpowder['k_2']
-        self.I_k = self._gpowder['I_k'] * 1e6
-        self.z_k = self._gpowder['Z_k']
-        # self.T_1 = self._gpowder['T_1']
-        self.alpha_k = self._gpowder['alpha_k'] * 1e-3
-        self.lambda_1 = self._gpowder['lambda_1']
-        self.lambda_2 = self._gpowder['lambda_2']
+        self.k = self._gunpowder['etta'] + 1
+        self.f = self._gunpowder['f'] * 1e6
+        self.ro = self._gunpowder['ro'] * 1e3
+        self.k_1 = self._gunpowder['k_1']
+        self.k_2 = self._gunpowder['k_2']
+        self.I_k = self._gunpowder['I_k'] * 1e6
+        self.z_k = self._gunpowder['Z_k']
+        # self.T_1 = self._gunpowder['T_1']
+        self.alpha_k = self._gunpowder['alpha_k'] * 1e-3
+        self.lambda_1 = self._gunpowder['lambda_1']
+        self.lambda_2 = self._gunpowder['lambda_2']
 
     def __str__(self):
-        return str(self._gpowder)
+        return str(self._gunpowder)
 
     def __repr__(self):
         return 'GunPowder("gunpowder_name")'
 
-    @classmethod
-    def load_db(self, fp: typing.IO[str] = None) -> typing.Dict[str, dict]:
+    def _check_gunpowder(self, gunpowder: dict) -> dict:
+        for key in GUNPOWDER_KEYS:
+            try:
+                gunpowder[key]
+            except KeyError:
+                raise KeyError('Параметр пороха не существует')
+        return gunpowder
+
+    @staticmethod
+    def load_database(file_path: typing.IO[str] = None) -> typing.Dict[str, dict]:
         """
         Загружает все пороха из базы данных, расположенной в
             balltic\\powders\\gpowders.json
 
         Parameters
         ----------
-        fp: TextIO or BinaryIO, optional
+        file_path: TextIO or BinaryIO, optional
             Путь к файлу базы данных
         """
-        if fp is not None:
-            file_path = fp
+        if file_path is not None:
+            file_path = file_path
         else:
             file_path = '\\balltic\\powders\\gpowders.json'
         try:
@@ -103,7 +114,7 @@ class GunPowder(BasePowder):
             raise FileNotFoundError('Файл не найден или не существует')
 
     @classmethod
-    def load_gpowder(self, name: str) -> dict:
+    def load_gunpowder(self, name: str) -> dict:
         """
         Загружает по названию порох из базы данных, расположенной в
             "balltic\\powders\\gpowders.json"
@@ -114,29 +125,21 @@ class GunPowder(BasePowder):
             Название пороха. Следует писать дробь через двойной обратный слэш
             Пример:
                 '16/1 тр' -> '16\\1 тр'
-        fp: TextIO or BinaryIO, optional
+        file_path: TextIO or BinaryIO, optional
             Путь к файлу базы данных
 
         Returns
         -------
-        gpowder: dict
+        gunpowder: dict
             Словарь с параметрами пороха
         """
         if isinstance(name, str):
             pass
         else:
             raise ValueError('Название пороха должно быть строкой')
-        gpowders = self.load_db()
+        gunpowders = self.load_database()
         try:
-            gpowder = gpowders[name]
+            gunpowder = gunpowders[name]
         except KeyError:
             raise KeyError('Марка пороха не найдена или не существует')
-        return self._check_gpowder(self, gpowder)
-
-    def _check_gpowder(self, gpowder: dict) -> dict:
-        for key in GPOWDER_KEYS:
-            try:
-                gpowder[key]
-            except KeyError:
-                raise KeyError('Параметр пороха не существует')
-        return gpowder
+        return self._check_gunpowder(self, gunpowder)

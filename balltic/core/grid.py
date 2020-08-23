@@ -8,12 +8,12 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from balltic.core.guns import ArtilleryGun, AirGun
-from balltic.core.gpowder import GunPowder
+from balltic.core.guns import ArtilleryGun, PneumaticGun
+from balltic.core.gunpowder import GunPowder
 
 
 class BaseGrid(metaclass=ABCMeta):
-    gun:        typing.Union[ArtilleryGun, AirGun]
+    gun:        typing.Union[ArtilleryGun, PneumaticGun]
     gpowder:    GunPowder
     nodes:      int
 
@@ -234,7 +234,7 @@ class EulerianGrid(BaseGrid):
 
         Parameters
         ----------
-        file: str or file
+        path: str or file
             Either the filename (string) or an open file (file-like object)
             where the data will be saved. If file is a string or a Path, the
             ``.npz`` extension will be appended to the filename if it is not
