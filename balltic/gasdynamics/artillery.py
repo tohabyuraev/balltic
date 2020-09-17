@@ -18,7 +18,7 @@ class ArtilleryGrid(EulerianGrid):
 
     Parameters
     ----------
-    gun: NamedTuple
+    gun: ArtilleryGun
         Именнованный кортеж начальных условий и параметров АО
     gunpowder: str
         Название пороха
@@ -40,7 +40,7 @@ class ArtilleryGrid(EulerianGrid):
     solution:
     """
     def __str__(self):
-        return 'Обьект класса ArtilleryGrid'
+        return 'ArtilleryGrid Class'
 
     def __repr__(self):
         return (f'{self.__class__.__name__}(gun, gunpowder)')

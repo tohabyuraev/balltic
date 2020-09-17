@@ -40,7 +40,7 @@ DEFAULT_GP = {
     'lambda_2': 0.0,
 }
 
-AVERAGE_GP = {
+AVERAGE_GUNPOWDER = {
     'f': 1e6,
     'k': 1.25,
     'ro': 1.6e3,
