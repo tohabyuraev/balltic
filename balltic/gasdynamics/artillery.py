@@ -20,18 +20,25 @@ class ArtilleryGrid(EulerianGrid):
     ----------
     gun: ArtilleryGun
         Именнованный кортеж начальных условий и параметров АО
+
     gunpowder: str
         Название пороха
+
     nodes: int
         Количество узлов (интерфейсов) сетки
+
     omega_q: int or float, optional
         Отношение массы заряда к массе снаряда
+
     denload: int or float, optional
         Плотность заряжания
+
     barrel: int or float, optional
         Длина ведущей части стола
+
     kurant: int or float, optional
         Число Куранта
+
     boostp: int or float, optional
         Значение давления форсирования
 
@@ -72,7 +79,8 @@ class ArtilleryGrid(EulerianGrid):
 
         self.omega = self.gun.omega_q * self.gun.shell
         self.gun = self.gun._replace(cs_area=np.pi * self.gun.caliber ** 2 / 4)
-        self.gun = self.gun._replace(chamber=self.omega / self.gun.denload / self.gun.cs_area)
+        self.gun = self.gun._replace(
+            chamber=self.omega / self.gun.denload / self.gun.cs_area)
 
         self.ro_cell = np.full(self.nodes, self.gun.denload)
         self.v_cell = np.full(self.nodes, 0.0)
@@ -95,8 +103,8 @@ class ArtilleryGrid(EulerianGrid):
         )
 
         # для расчета Маха на интерфейсе
-        self.mah_cell_m = np.full(self.nodes - 1, 0.0)
-        self.mah_cell_p = np.full(self.nodes - 1, 0.0)
+        self.mah_cell_minus = np.full(self.nodes - 1, 0.0)
+        self.mah_cell_plus = np.full(self.nodes - 1, 0.0)
 
         # для расчета потока q (Векторы H)
         self.h_param = np.full(
@@ -186,25 +194,25 @@ class ArtilleryGrid(EulerianGrid):
 
     def _get_q(self):
         self.h_param = self.ro_cell * self.press_cell / self.gunpowder.I_k
-        coef_stretch = self._x_previous / self.x_interface[1]
+        coef_stretch = self._previous_cell_lenght / self.x_interface[1]
         self.q_param[0][1:-1] = coef_stretch * (
             self.q_param[0][1:-1]
-            - self.tau / self._x_previous
+            - self.tau / self._previous_cell_lenght
             * (self.f_param[0][1:] - self.f_param[0][:-1])
         )
         self.q_param[1][1:-1] = coef_stretch * (
             self.q_param[1][1:-1]
-            - self.tau / self._x_previous
+            - self.tau / self._previous_cell_lenght
             * (self.f_param[1][1:] - self.f_param[1][:-1])
         )
         self.q_param[2][1:-1] = coef_stretch * (
             self.q_param[2][1:-1]
-            - self.tau / self._x_previous
+            - self.tau / self._previous_cell_lenght
             * (self.f_param[2][1:] - self.f_param[2][:-1])
         )
         self.q_param[3][1:-1] = coef_stretch * (
             self.q_param[3][1:-1]
-            - self.tau / self._x_previous
+            - self.tau / self._previous_cell_lenght
             * (
                 self.f_param[3][1:] - self.f_param[3][:-1]
                 - self.h_param[1:-1] * self.x_interface[1]
@@ -273,9 +281,11 @@ class ArtilleryGrid(EulerianGrid):
     def _border(self):
         """
         Метод "граничных условий"
+
         Переопределяет значения вектора q в первой и последней ячейке,
-            а также скорость газа в первой ячейке, чтобы выполнялись граничные условия
+        а также скорость газа в первой ячейке, чтобы выполнялись граничные условия
         """
+
         self.q_param[0][0] = self.q_param[0][1]
         self.q_param[0][-1] = self.q_param[0][-2]
 
@@ -296,6 +306,7 @@ class ArtilleryGrid(EulerianGrid):
         Если давление не достигает давления форсирования,
             то [0] = 0, [1] = const
         """
+
         if self.press_cell[-2] < self.gun.boostp:
             return 0, self.x_interface[-1]
         else:

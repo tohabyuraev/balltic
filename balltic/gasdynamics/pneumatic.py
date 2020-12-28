@@ -20,16 +20,22 @@ class PneumaticGrid(EulerianGrid):
     ----------
     gun: PneumaticGun
         Именованный кортеж начальных условий и параметров АО
+
     gas: Gas
         Именованный кортеж параметров легкого газа
+
     nodes: int
         Количество узлов (интерфейсов) сетки
+
     initialp: float, optional
         Начальное давление в каморе
+
     chamber: int or float, optional
         Начальная длина запоршневого пространства
+
     barrel: int or float, optional
         Длина ведущей части стола
+
     kurant: int or float, optional
         Число Куранта
 
@@ -37,6 +43,7 @@ class PneumaticGrid(EulerianGrid):
     -------
     solution:
     """
+
     def __str__(self):
         return 'Обьект класса PneumaticGrid'
 
@@ -83,8 +90,8 @@ class PneumaticGrid(EulerianGrid):
         self.press_cell = np.zeros(self.nodes)
 
         # Для расчета Маха на интерфейсе
-        self.mah_cell_m = np.zeros(self.nodes - 1)
-        self.mah_cell_p = np.zeros(self.nodes - 1)
+        self.mah_cell_minus = np.zeros(self.nodes - 1)
+        self.mah_cell_plus = np.zeros(self.nodes - 1)
 
         # Для расчета потока f (Векторы Ф)
         self.F_param_p = np.array(
@@ -126,21 +133,21 @@ class PneumaticGrid(EulerianGrid):
         return self._run()
 
     def _get_q(self):
-        coef_stretch = self._x_previous / self.x_interface[1]
+        coef_stretch = self._previous_cell_lenght / self.x_interface[1]
 
         self.q_param[0][1:-1] = coef_stretch \
             * (self.q_param[0][1:-1]
-               - self.tau / self._x_previous
+               - self.tau / self._previous_cell_lenght
                * (self.f_param[0][1:] - self.f_param[0][:-1]))
 
         self.q_param[1][1:-1] = coef_stretch \
             * (self.q_param[1][1:-1]
-               - self.tau / self._x_previous
+               - self.tau / self._previous_cell_lenght
                * (self.f_param[1][1:] - self.f_param[1][:-1]))
 
         self.q_param[2][1:-1] = coef_stretch \
             * (self.q_param[2][1:-1]
-               - self.tau / self._x_previous
+               - self.tau / self._previous_cell_lenght
                * (self.f_param[2][1:] - self.f_param[2][:-1]))
 
         self.ro_cell = self.q_param[0]

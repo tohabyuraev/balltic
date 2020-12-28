@@ -1,119 +1,44 @@
 __author__ = 'Anthony Byuraev'
 
-__all__ = ['EulerianGrid', 'BaseGrid']
+__all__ = ['EulerianGrid']
 
 import os
-import typing
-from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from balltic.core.guns import ArtilleryGun, PneumaticGun
-from balltic.core.gunpowder import GunPowder
 
-
-class BaseGrid(metaclass=ABCMeta):
-    gun:        typing.Union[ArtilleryGun, PneumaticGun]
-    gpowder:    GunPowder
-    nodes:      int
-
-    @abstractmethod
-    def _get_q(self):
-        pass
-
-    @abstractmethod
-    def _get_f(self):
-        pass
-
-    @abstractmethod
-    def _get_F_mines(self):
-        pass
-
-    @abstractmethod
-    def _get_F_plus(self):
-        pass
-
-    @abstractmethod
-    def _border(self):
-        pass
-
-    @abstractmethod
-    def _end_vel_x(self):
-        pass
-
-    @abstractmethod
-    def _get_c_interface(self):
-        pass
-
-    @abstractmethod
-    def _get_mah_mp(self):
-        pass
-
-    @abstractmethod
-    def _get_mah_press_interface(self):
-        pass
-
-    @abstractmethod
-    def _get_tau(self):
-        pass
-
-    @abstractmethod
-    def _new_x_interfaces(self):
-        pass
-
-    @abstractmethod
-    def _fetta_plus(self):
-        pass
-
-    @abstractmethod
-    def _fetta_mines(self):
-        pass
-
-    @abstractmethod
-    def _getta_plus(self):
-        pass
-
-    @abstractmethod
-    def _getta_mines(self):
-        pass
-
-    @abstractmethod
-    def _run(self):
-        pass
-
-
-class EulerianGrid(BaseGrid):
-    """
-    Класс реализует общие методы, для расчетов в газодинамической постановке
-    """
-
+class EulerianGrid(object):
     def __repr__(self):
         return f'{self.__class__.__name__}()'
 
     def __init__(self):
+        """
+        Класс реализует общие методы,
+            для расчетов в газодинамической постановке
+        """
+
         self.tau = 0
-        # длина ячейки на пред. шаге (коор-та 1 границы)
-        #   необходимо для расчета веторов q
-        self._x_previous = 0
+        #  Длина ячейки на пред. шаге. 3необходимо для расчета веторов q
+        self._previous_cell_lenght = 0
 
-    def _get_c_interface(self):
+    def _velocity_parameters(self):
         self.c_interface = (self.c_cell[1:] + self.c_cell[:-1]) / 2
-
-    def _get_mah_mp(self):
-        self.mah_cell_m = (self.v_cell[:-1] - self.v_interface) \
-            / self.c_interface
-        self.mah_cell_p = (self.v_cell[1:] - self.v_interface) \
-            / self.c_interface
+        self.mah_cell_minus = \
+            (self.v_cell[:-1] - self.v_interface) / self.c_interface
+        self.mah_cell_plus = \
+            (self.v_cell[1:] - self.v_interface) / self.c_interface
 
     def _get_mah_press_interface(self):
         self.mah_interface = self._fetta_plus() + self._fetta_mines()
-        self.press_interface = self._getta_plus() * self.press_cell[:-1] + \
-            self._getta_mines() * self.press_cell[1:]
+        self.press_interface = \
+            self._getta_plus() * self.press_cell[:-1] \
+            + self._getta_mines() * self.press_cell[1:]
 
-    def _get_tau(self):
-        buf = (self.x_interface[1:] - self.x_interface[:-1]) / \
-            (abs(self.v_cell[1:-1]) + self.c_cell[1:-1])
-        self.tau = self.gun.kurant * min(buf)
+    def _calculate_tau(self):
+        buffer_ = \
+            (self.x_interface[1:] - self.x_interface[:-1]) \
+            / (abs(self.v_cell[1:-1]) + self.c_cell[1:-1])
+        self.tau = self.gun.kurant * min(buffer_)
 
     def _new_x_interfaces(self, last_x_interface):
         self.x_interface = np.linspace(0, last_x_interface, self.nodes - 1)
@@ -122,63 +47,66 @@ class EulerianGrid(BaseGrid):
         """
         Параметр в пересчете давления на границе для индекса +
         """
-        answer = np.zeros_like(self.mah_cell_m)
-        if_cond = np.abs(self.mah_cell_m) >= 1
-        else_cond = np.abs(self.mah_cell_m) < 1
+        answer = np.zeros_like(self.mah_cell_minus)
+        if_cond = np.abs(self.mah_cell_minus) >= 1
+        else_cond = np.abs(self.mah_cell_minus) < 1
 
-        answer[if_cond] = 0.5 * (self.mah_cell_m[if_cond]
-                                 + np.abs(self.mah_cell_m[if_cond]))
+        answer[if_cond] = 0.5 * (self.mah_cell_minus[if_cond]
+                                 + np.abs(self.mah_cell_minus[if_cond]))
 
-        answer[else_cond] = 0.25 * (self.mah_cell_m[else_cond] + 1) ** 2 \
-                                 * (1 + 4 * 1 / 8 * (self.mah_cell_m[else_cond] - 1) ** 2)
+        answer[else_cond] = 0.25 * (self.mah_cell_minus[else_cond] + 1) ** 2 \
+                                 * (1 + 4 * 1 / 8 * (self.mah_cell_minus[else_cond] - 1) ** 2)
         return answer
 
     def _fetta_mines(self):
         """
         Параметр в пересчете давления на границе для индекса -
         """
-        answer = np.zeros_like(self.mah_cell_p)
-        if_cond = np.abs(self.mah_cell_p) >= 1
-        else_cond = np.abs(self.mah_cell_p) < 1
+        answer = np.zeros_like(self.mah_cell_plus)
+        if_cond = np.abs(self.mah_cell_plus) >= 1
+        else_cond = np.abs(self.mah_cell_plus) < 1
 
-        answer[if_cond] = 0.5 * (self.mah_cell_p[if_cond]
-                                 - np.abs(self.mah_cell_p[if_cond]))
+        answer[if_cond] = 0.5 * (self.mah_cell_plus[if_cond]
+                                 - np.abs(self.mah_cell_plus[if_cond]))
 
-        answer[else_cond] = -0.25 * (self.mah_cell_p[else_cond] - 1) ** 2 \
-                                  * (1 + 4 * 1 / 8 * (self.mah_cell_p[else_cond] + 1) ** 2)
+        answer[else_cond] = -0.25 * (self.mah_cell_plus[else_cond] - 1) ** 2 \
+                                  * (1 + 4 * 1 / 8 * (self.mah_cell_plus[else_cond] + 1) ** 2)
         return answer
 
     def _getta_plus(self):
         """
         Параметр в пересчете давления на границе для индекса +
         """
-        answer = np.zeros_like(self.mah_cell_m)
-        if_cond = np.abs(self.mah_cell_m) >= 1
-        else_cond = np.abs(self.mah_cell_m) < 1
+        answer = np.zeros_like(self.mah_cell_minus)
+        if_cond = np.abs(self.mah_cell_minus) >= 1
+        else_cond = np.abs(self.mah_cell_minus) < 1
 
-        answer[if_cond] = (self.mah_cell_m[if_cond]
-                           + np.abs(self.mah_cell_m[if_cond])) / 2 / self.mah_cell_m[if_cond]
+        answer[if_cond] = (
+            self.mah_cell_minus[if_cond] + np.abs(self.mah_cell_minus[if_cond])
+        ) / 2 / self.mah_cell_minus[if_cond]
 
-        answer[else_cond] = (self.mah_cell_m[else_cond] + 1) ** 2 \
-            * ((2 - self.mah_cell_m[else_cond]) / 4
-                + 3 / 16 * self.mah_cell_m[else_cond]
-                * (self.mah_cell_m[else_cond] - 1) ** 2)
+        answer[else_cond] = (self.mah_cell_minus[else_cond] + 1) ** 2 \
+            * ((2 - self.mah_cell_minus[else_cond]) / 4
+                + 3 / 16 * self.mah_cell_minus[else_cond]
+                * (self.mah_cell_minus[else_cond] - 1) ** 2)
         return answer
 
     def _getta_mines(self):
         """
         Параметр в пересчете давления на границе для индекса -
         """
-        answer = np.zeros_like(self.mah_cell_p)
-        if_cond = np.abs(self.mah_cell_p) >= 1
-        else_cond = np.abs(self.mah_cell_p) < 1
+        answer = np.zeros_like(self.mah_cell_plus)
+        if_cond = np.abs(self.mah_cell_plus) >= 1
+        else_cond = np.abs(self.mah_cell_plus) < 1
 
-        answer[if_cond] = (self.mah_cell_p[if_cond]
-                           - np.abs(self.mah_cell_p[if_cond])) / 2 / self.mah_cell_p[if_cond]
+        answer[if_cond] = (
+            self.mah_cell_plus[if_cond] - np.abs(self.mah_cell_plus[if_cond])
+        ) / 2 / self.mah_cell_plus[if_cond]
 
-        answer[else_cond] = (self.mah_cell_p[else_cond] - 1) ** 2 \
-            * ((2 + self.mah_cell_p[else_cond]) / 4 - 3 / 16 * self.mah_cell_p[else_cond]
-                                                             * (self.mah_cell_p[else_cond] + 1) ** 2)
+        answer[else_cond] = (self.mah_cell_plus[else_cond] - 1) ** 2 \
+            * ((2 + self.mah_cell_plus[else_cond]) / 4
+                - 3 / 16 * self.mah_cell_plus[else_cond]
+                * (self.mah_cell_plus[else_cond] + 1) ** 2)
         return answer
 
     def _run(self):
@@ -198,8 +126,8 @@ class EulerianGrid(BaseGrid):
 
         # Последовательное вычисления с шагом по времени
         while True:
-            self._get_tau()
-            self._x_previous = self.x_interface[1]
+            self._calculate_tau()
+            self._previous_cell_lenght = self.x_interface[1]
             self._new_x_interfaces(self._end_vel_x()[1])
             self.v_interface[-1] = self._end_vel_x()[0]
             # линейное распределение скорости
@@ -217,8 +145,7 @@ class EulerianGrid(BaseGrid):
             self.stem_pressure.append(self.press_cell[1])
 
             # последовательные вычисления
-            self._get_c_interface()
-            self._get_mah_mp()
+            self._velocity_parameters()
             self._get_mah_press_interface()
             self._get_F_mines()
             self._get_F_plus()

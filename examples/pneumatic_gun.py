@@ -1,29 +1,25 @@
 from balltic import PneumaticGrid, PneumaticGun, Gas
 
 my_big_gun = PneumaticGun(
-    shell = 0.1,
-    kurant = 0.5,
-    barrel = 2,
-    chamber = 0.5,
-    caliber = 0.03,
-    initialp = 5 * 1e6,
+    shell=0.1,
+    kurant=0.5,
+    barrel=2,
+    chamber=0.5,
+    caliber=0.03,
+    initialp=5 * 1e6,
 )
 
-boom_gas = Gas(
-    k = 1.4,
-    R = 287,
-    ro = 141.471,
-)
+boom_gas = Gas(k=1.4, R=287, ro=141.471)
 
-# Получить решение для условий и параметров,
-#   приведенных в `my_big_gun` и `boom_gas`
+#  Получить решение для условий и параметров,
+#  приведенных в `my_big_gun` и `boom_gas`
 solution = PneumaticGrid(gun=my_big_gun, gas=boom_gas)
 
-# Скорость снаряда в момент вылета из канала ствола
+#  Скорость снаряда в момент вылета из канала ствола
 solution.shell_velocity[-1]
 
-# Сохранить решение
+#  Сохранить решение
 solution.save()
 
-# Загрузить ранее полученное решение
+#  Загрузить ранее полученное решение
 solution.load()
